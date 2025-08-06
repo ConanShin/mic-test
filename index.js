@@ -2,8 +2,8 @@ const WebSocket = require('ws');
 const record = require('node-record-lpcm16');
 const readline = require('readline');
 
-//const WEBSOCKET_URL = 'wss://partner-gateway.sktauto.ai/recognition';
-const WEBSOCKET_URL = 'ws://localhost:8090/recognition';
+const WEBSOCKET_URL = 'wss://partner-gateway.sktauto.ai/recognition';
+// const WEBSOCKET_URL = 'ws://localhost:8090/recognition';
 
 let ws = null;
 let mic = null;

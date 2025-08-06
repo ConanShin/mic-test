@@ -1,7 +1,6 @@
 # 음성 인식 WebSocket 클라이언트
 
 이 프로젝트는 Node.js를 사용하여 WebSocket 서버에 음성 데이터를 전송하고, 음성 인식 결과를 받아 출력하는 간단한 클라이언트 예제입니다.  
-`r` 키를 눌러 WebSocket 연결을 재시도하고 음성 인식을 다시 시작할 수 있습니다.
 
 ---
 
@@ -28,7 +27,7 @@
 
 ### 공통 요구사항
 - Node.js (버전 12 이상 권장) 설치
-- WebSocket 음성 인식 서버 구동 중이어야 함 (`ws://localhost:8090/recognition` 사용 예시)
+- WebSocket 음성 인식 서버 구동 중이어야 함 (`wss://partner-gateway.sktauto.ai/recognition` 사용 예시)
 
 ### 운영체제별 녹음 프로그램 설치
 
