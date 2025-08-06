@@ -29,6 +29,44 @@
 - Node.js (버전 12 이상 권장) 설치
 - WebSocket 음성 인식 서버 구동 중이어야 함 (`wss://partner-gateway.sktauto.ai/recognition` 사용 예시)
 
+### Node.js 설치
+
+#### Windows
+- **공식 설치 파일** (권장):
+  1. [Node.js 공식 사이트](https://nodejs.org/)에서 LTS 버전 다운로드
+  2. 설치 파일 실행 후 기본 설정으로 설치
+  3. 설치 완료 후 명령 프롬프트에서 `node --version` 실행하여 설치 확인
+
+#### macOS
+- **Homebrew를 통한 설치** (권장):
+  ```bash
+  brew install node
+  ```
+
+- **공식 설치 파일**:
+  1. [Node.js 공식 사이트](https://nodejs.org/)에서 macOS용 설치 파일 다운로드
+  2. 설치 파일 실행 후 기본 설정으로 설치
+
+#### Linux (Ubuntu/Debian)
+- **NodeSource 저장소를 통한 설치** (권장):
+  ```bash
+  curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+  sudo apt-get install -y nodejs
+  ```
+
+- **apt를 통한 설치**:
+  ```bash
+  sudo apt-get update
+  sudo apt-get install nodejs npm
+  ```
+
+#### 설치 확인
+모든 운영체제에서 설치 후 다음 명령어로 설치를 확인하세요:
+```bash
+node --version
+npm --version
+```
+
 ### 운영체제별 녹음 프로그램 설치
 
 #### Windows
