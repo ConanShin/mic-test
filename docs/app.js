@@ -122,11 +122,9 @@ class AutoProxyMicTest {
     }
 
     connectWebSocket() {
-        this.ws = new WebSocket(this.WEBSOCKET_URL, {
-            headers: {
-              'BMW-Client-Id': 'testId123',
-            }
-          });
+        // URL에 BMW-Client-Id를 쿼리 파라미터로 추가
+        const wsUrl = `${this.WEBSOCKET_URL}?BMW-Client-Id=testId123`;
+        this.ws = new WebSocket(wsUrl);
         
         this.ws.onopen = () => {
             this.updateConnectionStatus('연결됨', true);
