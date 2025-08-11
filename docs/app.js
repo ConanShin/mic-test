@@ -122,7 +122,11 @@ class AutoProxyMicTest {
     }
 
     connectWebSocket() {
-        this.ws = new WebSocket(this.WEBSOCKET_URL);
+        this.ws = new WebSocket(this.WEBSOCKET_URL, {
+            headers: {
+              'BMW-Client-Id': 'testId123',
+            }
+          });
         
         this.ws.onopen = () => {
             this.updateConnectionStatus('연결됨', true);
