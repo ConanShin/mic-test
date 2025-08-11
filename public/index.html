@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Proxy Mic Test - Web Version</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Auto Proxy Mic Test</h1>
+            <p>웹 기반 음성 인식 테스트</p>
+        </header>
+
+        <div class="main-content">
+            <div class="status-panel">
+                <div class="status-item">
+                    <span class="label">연결 상태:</span>
+                    <span id="connection-status" class="status disconnected">연결 안됨</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">마이크 상태:</span>
+                    <span id="mic-status" class="status inactive">비활성</span>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <button id="start-btn" class="btn btn-primary">음성 인식 시작</button>
+                <button id="stop-btn" class="btn btn-secondary" disabled>음성 인식 중지</button>
+                <button id="restart-btn" class="btn btn-warning">재시작</button>
+                <button id="meta-btn" class="btn btn-info">RecognitionMeta 전송</button>
+                <button id="picklist-btn" class="btn btn-success" disabled>연락처 선택</button>
+            </div>
+
+            <div class="output-panel">
+                <h3>서버 응답</h3>
+                <div id="output" class="output-container"></div>
+            </div>
+
+            <div class="info-panel">
+                <h3>사용법</h3>
+                <ul>
+                    <li><strong>음성 인식 시작:</strong> 마이크를 활성화하고 음성 인식을 시작합니다</li>
+                    <li><strong>음성 인식 중지:</strong> 마이크를 비활성화하고 음성 인식을 중지합니다</li>
+                    <li><strong>재시작:</strong> WebSocket 연결을 재시작합니다</li>
+                    <li><strong>RecognitionMeta 전송:</strong> Navigation과 MyModesSet 그룹으로 메타데이터를 전송합니다</li>
+                    <li><strong>연락처 선택:</strong> Nav_SetDestinationByContact 결과에서 연락처 선택 목록을 전송합니다</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
