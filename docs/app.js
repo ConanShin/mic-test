@@ -9,8 +9,8 @@ class AutoProxyMicTest {
         this.isRecording = false;
         
         // WebSocket URL
-        this.WEBSOCKET_URL = 'wss://partner-gateway.sktauto.ai/recognition';
-        // this.WEBSOCKET_URL = 'ws://localhost:8090/recognition';
+        // this.WEBSOCKET_URL = 'wss://partner-gateway.sktauto.ai/recognition';
+        this.WEBSOCKET_URL = 'ws://localhost:8090/recognition';
         
         this.initializeElements();
         this.bindEvents();
@@ -25,6 +25,8 @@ class AutoProxyMicTest {
         this.connectionStatus = document.getElementById('connection-status');
         this.micStatus = document.getElementById('mic-status');
         this.output = document.getElementById('output');
+        this.voiceLevelBar = document.getElementById('voice-level-bar');
+        this.voiceLevelText = document.getElementById('voice-level-text');
     }
 
     bindEvents() {
@@ -57,33 +59,56 @@ class AutoProxyMicTest {
         this.micStatus.className = `status ${isActive ? 'active' : 'inactive'}`;
     }
 
+    updateVoiceLevel(level) {
+        if (this.voiceLevelBar && this.voiceLevelText) {
+            // 레벨을 0-100 범위로 정규화 (임계값 500 기준)
+            const normalizedLevel = Math.min(100, (level / 500) * 100);
+            this.voiceLevelBar.style.setProperty('--voice-level', `${normalizedLevel}%`);
+            this.voiceLevelBar.style.setProperty('--voice-level-width', `${normalizedLevel}%`);
+            this.voiceLevelText.textContent = Math.round(level);
+        }
+    }
+
     async startRecognition() {
         try {
-            // 마이크 권한 요청
+            // 마이크 권한 요청 - Node.js 버전과 동일한 설정
             const stream = await navigator.mediaDevices.getUserMedia({ 
                 audio: {
-                    sampleRate: 16000,
-                    channelCount: 1,
-                    echoCancellation: true,
-                    noiseSuppression: true
+                    sampleRate: 16000,  // 16kHz (Node.js 버전과 동일)
+                    channelCount: 1,    // 모노
+                    echoCancellation: false,  // 에코 캔슬레이션 비활성화
+                    noiseSuppression: false,  // 노이즈 서프레션 비활성화
+                    autoGainControl: false    // 자동 게인 컨트롤 비활성화
                 } 
             });
 
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            this.analyser = this.audioContext.createAnalyser();
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: 16000  // 16kHz로 강제 설정
+            });
+            
+            // 오디오 컨텍스트가 일시정지 상태라면 재개
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+                this.log('오디오 컨텍스트 재개됨', 'info');
+            }
+            
+            // AudioContext를 사용하여 PCM 데이터 수집
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: 16000  // 16kHz로 강제 설정
+            });
+            
+            // ScriptProcessorNode를 사용하여 원시 PCM 데이터 수집
+            this.scriptProcessor = this.audioContext.createScriptProcessor(4096, 1, 1);
             this.microphone = this.audioContext.createMediaStreamSource(stream);
             
-            this.microphone.connect(this.analyser);
-            this.analyser.fftSize = 2048;
+            this.microphone.connect(this.scriptProcessor);
+            this.scriptProcessor.connect(this.audioContext.destination);
             
-            const bufferLength = this.analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
+            this.stream = stream;
+            this.log('마이크 연결 성공', 'success');
             
-            // WebSocket 연결
+            // WebSocket 연결 후 오디오 스트리밍 시작
             this.connectWebSocket();
-            
-            // 오디오 데이터 스트리밍 시작
-            this.streamAudioData();
             
             this.isRecording = true;
             this.updateMicStatus('활성', true);
@@ -98,9 +123,19 @@ class AutoProxyMicTest {
     }
 
     stopRecognition() {
+        if (this.scriptProcessor) {
+            this.scriptProcessor.disconnect();
+            this.scriptProcessor = null;
+        }
+        
         if (this.microphone) {
             this.microphone.disconnect();
             this.microphone = null;
+        }
+        
+        if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
         }
         
         if (this.audioContext) {
@@ -128,7 +163,10 @@ class AutoProxyMicTest {
         
         this.ws.onopen = () => {
             this.updateConnectionStatus('연결됨', true);
-            this.log('WebSocket 연결 성공', 'success');
+            this.log('WebSocket 연결 성공, 마이크 시작', 'success');
+            
+            // WebSocket 연결 완료 후 오디오 스트리밍 시작 (Node.js 버전과 동일)
+            this.startAudioStreaming();
         };
         
         this.ws.onmessage = (event) => {
@@ -167,32 +205,46 @@ class AutoProxyMicTest {
         };
     }
 
-    streamAudioData() {
-        if (!this.isRecording || !this.analyser || !this.ws) return;
+    startAudioStreaming() {
+        if (!this.isRecording || !this.scriptProcessor || !this.ws) {
+            this.log('오디오 스트리밍 시작 실패: 필요한 컴포넌트가 없습니다', 'error');
+            return;
+        }
         
-        const bufferLength = this.analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
+        let frameCount = 0;
         
-        const processAudio = () => {
+        // ScriptProcessorNode 이벤트 핸들러 설정 (Node.js 버전과 동일)
+        this.scriptProcessor.onaudioprocess = (event) => {
             if (!this.isRecording) return;
             
-            this.analyser.getByteFrequencyData(dataArray);
+            const inputBuffer = event.inputBuffer;
+            const inputData = inputBuffer.getChannelData(0); // 첫 번째 채널 (Float32Array)
             
-            // PCM 데이터로 변환 (16비트)
-            const pcmData = new Int16Array(bufferLength);
-            for (let i = 0; i < bufferLength; i++) {
-                pcmData[i] = (dataArray[i] - 128) * 256;
+            // Float32Array를 Int16Array로 변환 (16비트 PCM)
+            const pcmData = new Int16Array(inputData.length);
+            for (let i = 0; i < inputData.length; i++) {
+                // Float32 (-1.0 ~ 1.0)를 Int16 (-32768 ~ 32767)로 변환
+                pcmData[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32768));
             }
             
+            // 오디오 레벨 계산
+            const avgValue = pcmData.reduce((sum, val) => sum + Math.abs(val), 0) / pcmData.length;
+            
+            // 음성 레벨 표시기 업데이트
+            this.updateVoiceLevel(avgValue);
+            
+            // WebSocket으로 PCM 데이터 전송 (Node.js 버전과 동일)
             if (this.ws && this.ws.readyState === WebSocket.OPEN) {
                 this.ws.send(pcmData.buffer);
+                
+                frameCount++;
             }
-            
-            requestAnimationFrame(processAudio);
         };
         
-        processAudio();
+        this.log('PCM 오디오 데이터 스트리밍 시작', 'success');
     }
+    
+
 
     restart() {
         this.log('재연결 중...', 'info');

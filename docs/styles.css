@@ -88,6 +88,38 @@ header p {
     color: #383d41;
 }
 
+.voice-level-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.voice-level-bar {
+    width: 100px;
+    height: 20px;
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.voice-level-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+    width: var(--voice-level-width, 0%);
+    transition: width 0.1s ease;
+}
+
+#voice-level-text {
+    font-weight: bold;
+    min-width: 40px;
+    text-align: right;
+}
+
 .control-panel {
     display: flex;
     flex-wrap: wrap;
