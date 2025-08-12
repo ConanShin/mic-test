@@ -9,8 +9,8 @@ class AutoProxyMicTest {
         this.isRecording = false;
         
         // WebSocket URL
-        // this.WEBSOCKET_URL = 'wss://partner-gateway.sktauto.ai/recognition';
-        this.WEBSOCKET_URL = 'ws://localhost:8090/recognition';
+        this.WEBSOCKET_URL = 'wss://partner-gateway.sktauto.ai/recognition';
+        // this.WEBSOCKET_URL = 'ws://localhost:8090/recognition';
         
         this.initializeElements();
         this.bindEvents();
